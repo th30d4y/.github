@@ -51,6 +51,8 @@ jobs:
     secrets: inherit
 ```
 
+> Security note: this uses `pull_request_target` so the bot can post welcome comments on fork PRs. Keep this workflow free of checkout/build/test steps that execute PR branch code.
+
 > Tip: once you publish a stable tag for this workflow (for example `v1`), prefer `@v1` instead of `@main` so repositories get controlled, versioned updates instead of inheriting breaking changes immediately.
 
 ### 3) Validate and roll out

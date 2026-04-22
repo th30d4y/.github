@@ -21,6 +21,8 @@ on:
         type: string
   issues:
     types: [opened]
+  # SECURITY: pull_request_target is required for comment write access on fork PRs.
+  # Never add checkout/build/test steps here that execute PR branch code.
   pull_request_target:
     types: [opened]
 

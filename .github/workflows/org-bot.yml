@@ -1,0 +1,144 @@
+name: Organization Issue/PR Bot
+
+on:
+  issues:
+    types: [opened]
+  pull_request:
+    types: [opened]
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+  members: read
+
+jobs:
+  welcome-and-notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build event metadata
+        id: metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ "${{ github.event_name }}" == "issues" ]]; then
+            echo "type=Issue" >> "$GITHUB_OUTPUT"
+            echo "number=${{ github.event.issue.number }}" >> "$GITHUB_OUTPUT"
+            echo "title=${{ github.event.issue.title }}" >> "$GITHUB_OUTPUT"
+            echo "url=${{ github.event.issue.html_url }}" >> "$GITHUB_OUTPUT"
+          elif [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "type=Pull Request" >> "$GITHUB_OUTPUT"
+            echo "number=${{ github.event.pull_request.number }}" >> "$GITHUB_OUTPUT"
+            echo "title=${{ github.event.pull_request.title }}" >> "$GITHUB_OUTPUT"
+            echo "url=${{ github.event.pull_request.html_url }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "Unsupported event: ${{ github.event_name }}" >&2
+            exit 1
+          fi
+
+      - name: Post welcome comment
+        uses: actions/github-script@v7
+        env:
+          BOT_MESSAGE: |
+            👋 Hello! Thanks for your contribution. We will review this and get back to you as soon as possible. — th30d4y
+        with:
+          script: |
+            const message = process.env.BOT_MESSAGE.trim();
+            const issueNumber = context.issue.number;
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            try {
+              const comments = await github.paginate(github.rest.issues.listComments, {
+                owner,
+                repo,
+                issue_number: issueNumber,
+                per_page: 100
+              });
+
+              const alreadyCommented = comments.some((comment) => {
+                if (!comment?.body) return false;
+                if (!comment.user?.type?.toLowerCase().includes('bot')) return false;
+                return comment.body.includes("👋 Hello! Thanks for your contribution.") &&
+                  comment.body.includes("th30d4y");
+              });
+
+              if (alreadyCommented) {
+                core.info(`Skipping comment: matching bot comment already exists on #${issueNumber}`);
+                return;
+              }
+
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: issueNumber,
+                body: message
+              });
+            } catch (error) {
+              core.setFailed(`Failed to post welcome comment: ${error.message}`);
+            }
+
+      - name: Resolve organization owner recipients
+        id: recipients
+        uses: actions/github-script@v7
+        with:
+          result-encoding: string
+          script: |
+            const org = context.repo.owner;
+
+            try {
+              const admins = await github.paginate(github.rest.orgs.listMembers, {
+                org,
+                role: "admin",
+                per_page: 100
+              });
+
+              if (!admins.length) {
+                core.setFailed(`No organization owners/admins found for org "${org}".`);
+                return "";
+              }
+
+              const recipientSet = new Set();
+              for (const admin of admins) {
+                const user = await github.rest.users.getByUsername({ username: admin.login });
+                const publicEmail = user?.data?.email;
+                const fallbackNoreply = `${admin.id}+${admin.login}@users.noreply.github.com`;
+                recipientSet.add(publicEmail || fallbackNoreply);
+              }
+
+              const recipients = [...recipientSet].join(",");
+              core.info(`Resolved ${recipientSet.size} organization owner recipient(s).`);
+              return recipients;
+            } catch (error) {
+              core.setFailed(`Failed to resolve organization owners: ${error.message}`);
+              return "";
+            }
+
+      - name: Send owner notification email
+        if: ${{ steps.recipients.outputs.result != '' }}
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.EMAIL_USER }}
+          password: ${{ secrets.EMAIL_PASS }}
+          subject: "[${{ github.repository }}] New ${{ steps.metadata.outputs.type }} Opened: ${{ steps.metadata.outputs.title }}"
+          to: ${{ steps.recipients.outputs.result }}
+          from: th30d4y Bot <${{ secrets.EMAIL_USER }}>
+          html_body: |
+            <h3>📣 New ${{ steps.metadata.outputs.type }} Created</h3>
+            <p><strong>Repository:</strong> <code>${{ github.repository }}</code></p>
+            <p><strong>Type:</strong> ${{ steps.metadata.outputs.type }}</p>
+            <p><strong>Title:</strong> ${{ steps.metadata.outputs.title }}</p>
+            <p><strong>URL:</strong> <a href="${{ steps.metadata.outputs.url }}">${{ steps.metadata.outputs.url }}</a></p>
+            <hr />
+            <p>Automated notification by <strong>th30d4y</strong>.</p>
+
+      - name: Fail when email was not sent
+        if: ${{ steps.recipients.outputs.result == '' }}
+        shell: bash
+        run: |
+          echo "No recipients resolved, email notification was not sent." >&2
+          exit 1

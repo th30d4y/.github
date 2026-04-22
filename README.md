@@ -42,7 +42,7 @@ permissions:
 
 jobs:
   org-bot:
-    uses: th30d4y/.github/.github/workflows/org-bot.yml@main
+    uses: th30d4y/.github/.github/workflows/org-bot.yml@1ee789d935075c8a7dcef4a72f0df37e839879ee
     with:
       event_type: ${{ github.event_name == 'issues' && 'Issue' || 'Pull Request' }}
       number: ${{ github.event.issue.number || github.event.pull_request.number }}

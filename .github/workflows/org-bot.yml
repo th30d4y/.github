@@ -21,7 +21,9 @@ on:
         type: string
   issues:
     types: [opened]
-  pull_request:
+  # SECURITY: pull_request_target is required for comment write access on fork PRs.
+  # Never add checkout/build/test steps here that execute PR branch code.
+  pull_request_target:
     types: [opened]
 
 permissions:
@@ -66,7 +68,7 @@ jobs:
                 return;
               }
 
-              if (context.eventName === "pull_request" && payload.pull_request) {
+              if (["pull_request", "pull_request_target"].includes(context.eventName) && payload.pull_request) {
                 core.setOutput("type", "Pull Request");
                 core.setOutput("number", String(payload.pull_request.number));
                 core.setOutput("title", payload.pull_request.title || "(no title)");

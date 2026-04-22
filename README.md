@@ -32,7 +32,7 @@ name: Organization Issue/PR Bot Caller
 on:
   issues:
     types: [opened]
-  pull_request:
+  pull_request_target:
     types: [opened]
 
 permissions:
@@ -50,6 +50,8 @@ jobs:
       url: ${{ github.event.issue.html_url || github.event.pull_request.html_url }}
     secrets: inherit
 ```
+
+> Security note: this uses `pull_request_target` so the bot can post welcome comments on fork PRs. Keep this workflow free of checkout/build/test steps that execute PR branch code.
 
 > Tip: once you publish a stable tag for this workflow (for example `v1`), prefer `@v1` instead of `@main` so repositories get controlled, versioned updates instead of inheriting breaking changes immediately.
 

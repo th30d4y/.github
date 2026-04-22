@@ -42,7 +42,7 @@ permissions:
 
 jobs:
   org-bot:
-    uses: th30d4y/.github/.github/workflows/org-bot.yml@1ee789d935075c8a7dcef4a72f0df37e839879ee
+    uses: th30d4y/.github/.github/workflows/org-bot.yml@main
     with:
       event_type: ${{ github.event_name == 'issues' && 'Issue' || 'Pull Request' }}
       number: ${{ github.event.issue.number || github.event.pull_request.number }}
@@ -50,6 +50,8 @@ jobs:
       url: ${{ github.event.issue.html_url || github.event.pull_request.html_url }}
     secrets: inherit
 ```
+
+> Tip: once you publish a stable tag for this workflow (for example `v1`), prefer `@v1` instead of `@main`.
 
 ### 3) Validate and roll out
 

@@ -64,11 +64,12 @@ jobs:
                 per_page: 100
               });
 
+              const normalize = (text) => (text || "").replace(/\r\n/g, "\n").trim();
+              const expected = normalize(message);
               const alreadyCommented = comments.some((comment) => {
                 if (!comment?.body) return false;
                 if (!comment.user?.type?.toLowerCase().includes('bot')) return false;
-                return comment.body.includes("👋 Hello! Thanks for your contribution.") &&
-                  comment.body.includes("th30d4y");
+                return normalize(comment.body) === expected;
               });
 
               if (alreadyCommented) {
@@ -102,7 +103,7 @@ jobs:
               });
 
               if (!admins.length) {
-                core.setFailed(`No organization owners/admins found for org "${org}".`);
+                core.warning(`No organization owners/admins found for org "${org}".`);
                 return "";
               }
 

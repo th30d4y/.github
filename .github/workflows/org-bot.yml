@@ -10,7 +10,7 @@ on:
       number:
         description: Issue or pull request number
         required: false
-        type: string
+        type: number
       title:
         description: Issue or pull request title
         required: false
@@ -46,13 +46,13 @@ jobs:
                 const title = ${{ toJson(inputs.title) }};
                 const url = ${{ toJson(inputs.url) }};
 
-                if (!eventType || !number || !url) {
+                if (!eventType || number === null || number === undefined || !url) {
                   core.setFailed("workflow_call requires event_type, number, and url inputs.");
                   return;
                 }
 
                 core.setOutput("type", eventType);
-                core.setOutput("number", number);
+                core.setOutput("number", String(number));
                 core.setOutput("title", title || "(no title)");
                 core.setOutput("url", url);
                 return;

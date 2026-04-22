@@ -12,7 +12,7 @@ on:
         required: false
         type: number
       title:
-        description: Issue or pull request title
+        description: Issue or pull request title (optional; falls back to "(no title)")
         required: false
         type: string
       url:
@@ -92,7 +92,7 @@ jobs:
             const repo = context.repo.repo;
 
             try {
-              if (!issueNumber) {
+              if (issueNumber == null || Number.isNaN(issueNumber) || issueNumber <= 0) {
                 core.setFailed("Unable to determine issue/pull request number for comment.");
                 return;
               }

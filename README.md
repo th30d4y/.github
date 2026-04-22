@@ -51,7 +51,7 @@ jobs:
     secrets: inherit
 ```
 
-> Tip: once you publish a stable tag for this workflow (for example `v1`), prefer `@v1` instead of `@main`.
+> Tip: once you publish a stable tag for this workflow (for example `v1`), prefer `@v1` instead of `@main` so repositories get controlled, versioned updates instead of inheriting breaking changes immediately.
 
 ### 3) Validate and roll out
 

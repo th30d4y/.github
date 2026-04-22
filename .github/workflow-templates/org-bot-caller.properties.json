@@ -1,0 +1,11 @@
+{
+  "name": "Organization Issue/PR Bot Caller",
+  "description": "Calls the centralized th30d4y org bot workflow for new issues and pull requests.",
+  "iconName": "octicon-comment-discussion",
+  "categories": [
+    "Automation"
+  ],
+  "filePatterns": [
+    ".*"
+  ]
+}

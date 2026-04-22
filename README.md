@@ -7,7 +7,7 @@ Organization-wide GitHub defaults and shared automation.
 This repository now provides:
 
 - A centralized reusable workflow: `.github/workflows/org-bot.yml`
-- A workflow template for other repos: `.github/workflow-templates/org-bot-caller.yml`
+- A workflow template for other repositories: `.github/workflow-templates/org-bot-caller.yml`
 
 ### 1) Configure organization secrets
 

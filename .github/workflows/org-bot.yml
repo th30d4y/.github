@@ -46,7 +46,7 @@ jobs:
                 const title = ${{ toJson(inputs.title) }};
                 const url = ${{ toJson(inputs.url) }};
 
-                if (!eventType || number === null || number === undefined || !url) {
+                if (!eventType || number == null || !url) {
                   core.setFailed("workflow_call requires event_type, number, and url inputs.");
                   return;
                 }
